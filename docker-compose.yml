@@ -1,0 +1,13 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: bank-rabbitmq
+    ports:
+      - "5672:5672"   # Comunicación entre servicios
+      - "15672:15672" # Panel de control (Management UI)
+    networks:
+      - bank-network
+
+networks:
+  bank-network:
+    driver: bridge

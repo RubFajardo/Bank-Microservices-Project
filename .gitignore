@@ -1,0 +1,16 @@
+# IntelliJ y archivos del sistema
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# Archivos de compilación de Java/Spring
+**/build/
+**/out/
+**/target/
+.gradle/
+build/
+
+# Logs y temporales
+*.log
+**/logs/
