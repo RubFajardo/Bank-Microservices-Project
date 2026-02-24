@@ -10,38 +10,27 @@ Resiliencia
 
 Comunicación asíncrona basada en eventos
 
-Tecnologías Principales
+Tecnologías Principales:
 
 Java 17 (Microsoft OpenJDK)
 
 Spring Boot 3.4.2 – Framework principal para el desarrollo de microservicios
 
-RabbitMQ – Message Broker para la comunicación asíncrona entre servicios
+🛠️ Desafíos Técnicos y Soluciones
 
-Docker & Docker Compose – Contenedorización de la infraestructura (RabbitMQ, DBs)
+Comunicación entre servicios: Implementé RabbitMQ para resolver el acoplamiento entre microservicios, logrando una comunicación asíncrona basada en eventos. Esto permite que, si el servicio de transacciones está ocupado, el sistema de auditoría o notificaciones pueda procesar la información a su propio ritmo sin bloquear al usuario.
 
-Spring Security & JWT – Autenticación y autorización basada en tokens
+Seguridad Distribuida: Utilicé Spring Security y JWT para resolver el problema de la autenticación en sistemas stateless. Esto permite que cada microservicio valide la identidad del usuario de forma independiente sin necesidad de consultar una sesión centralizada, mejorando la escalabilidad.
 
-Spring Data JPA – Abstracción de persistencia de datos
+Persistencia y Agilidad: Usé H2 Database con Spring Data JPA para resolver la necesidad de un desarrollo rápido y pruebas volátiles. Esto me permite levantar el entorno completo en segundos sin depender de una base de datos externa pesada durante la fase de construcción.
 
-H2 Database – Base de datos en memoria para desarrollo ágil y tests
+Gestión de Infraestructura: Implementé Docker & Docker Compose para resolver el problema del "en mi máquina funciona". Toda la infraestructura (RabbitMQ, bases de datos, etc.) se despliega de forma idéntica en cualquier entorno con un solo comando.
 
-Spring Boot Actuator – Monitorización y salud de los servicios en tiempo real
+Tolerancia a Fallos: Configuré Dead Letter Queues (DLQ) y Retry Strategies (Exponential Backoff) para resolver la posible pérdida de datos. Si un mensaje falla (por ejemplo, por un error de red), el sistema lo reintenta de forma inteligente o lo mueve a una cola de inspección, garantizando que ninguna transacción bancaria se pierda.
 
-Arquitectura del Sistema
+Monitoreo en Tiempo Real: Usé Spring Boot Actuator para resolver la falta de visibilidad en sistemas distribuidos, permitiendo conocer el estado de salud y consumo de memoria de cada microservicio al instante.
 
-El sistema utiliza una Arquitectura Orientada a Eventos (EDA) para desacoplar los servicios.
-
-Resiliencia y Observabilidad
-
-Dead Letter Queues (DLQ)
-Implementación de colas de error para asegurar que ningún mensaje se pierda en caso de fallo técnico.
-
-Retry Strategy
-Mecanismo de reintentos automáticos con exponential backoff.
-
-Endpoints de Salud
-Uso de Actuator para verificar la conectividad con el Broker y el estado de la memoria.
+Decidí usar EDA para resolver el problema de la fragilidad de las arquitecturas monolíticas. Al desacoplar los servicios, si el Audit-Service falla, el Auth-Service puede seguir registrando usuarios sin interrupciones.
 
 Cómo Empezar
 1. Levantar Infraestructura
