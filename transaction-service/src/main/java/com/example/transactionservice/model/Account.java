@@ -13,15 +13,22 @@ public class Account {
     @Column(name = "balance", nullable = false)
     private Long balance;
 
-    @Column(name = "userId", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private TransactionUser user;
 
     public Account () {}
 
-    public Account (Long userId) {
-        this.userId = userId;
+    public Account (TransactionUser user) {
+        this.user = user;
         this.balance = 0L;
     }
+
+    public TransactionUser getUser() {
+        return user;
+    }
+
+    public void setUser(TransactionUser user) { this.user = user; }
 
     public void setId(Long id) {
         this.id = id;
@@ -29,14 +36,6 @@ public class Account {
 
     public Long getId() {
         return id;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public Long getUserId() {
-        return userId;
     }
 
     public Long getBalance() {

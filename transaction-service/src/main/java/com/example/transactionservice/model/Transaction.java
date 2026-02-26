@@ -10,17 +10,17 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "sourceAccountId", nullable = false)
+    @Column(name = "sourceAccountId")
     private Long sourceAccountId;
 
-    @Column(name = "destinationAccountId", nullable = false)
+    @Column(name = "destinationAccountId")
     private Long destinationAccountId;
 
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     private TransactionStatus status;
 
-    @Column(name = "amount")
+    @Column(name = "amount", nullable = false)
     private Long amount;
 
     public Transaction () {}

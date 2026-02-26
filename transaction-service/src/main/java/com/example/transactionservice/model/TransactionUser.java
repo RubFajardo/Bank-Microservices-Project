@@ -2,12 +2,14 @@ package com.example.transactionservice.model;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "transactionUser")
 public class TransactionUser {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "name", nullable = false)
@@ -15,6 +17,9 @@ public class TransactionUser {
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Account> accounts = new ArrayList<>();
 
     public TransactionUser () {}
 
@@ -24,6 +29,9 @@ public class TransactionUser {
         this.name = name;
     }
 
+    public List<Account> getAccounts() {
+        return accounts;
+    }
     public Long getId() { return id; }
     public String getEmail() { return email; }
     public String getName() { return name; }
