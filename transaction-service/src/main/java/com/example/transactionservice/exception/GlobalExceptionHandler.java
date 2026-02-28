@@ -24,4 +24,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(ex.getMessage());
     }
 
+    @ExceptionHandler(NegativeAmountException.class)
+    public ResponseEntity<String> negativeAmount (NegativeAmountException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
 }

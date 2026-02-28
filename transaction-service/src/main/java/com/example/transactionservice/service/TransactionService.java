@@ -1,7 +1,10 @@
 package com.example.transactionservice.service;
 
 import com.example.transactionservice.exception.InsufficientFundsException;
+import com.example.transactionservice.exception.NegativeAmountException;
 import com.example.transactionservice.exception.NotFoundException;
+import com.example.transactionservice.messaging.event.TransactionEvent;
+import com.example.transactionservice.messaging.publisher.TransactionPublisher;
 import com.example.transactionservice.model.Account;
 import com.example.transactionservice.model.Transaction;
 import com.example.transactionservice.model.TransactionStatus;
@@ -17,17 +20,21 @@ public class TransactionService {
 
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
-    private final RabbitTemplate rabbitTemplate;
+    private final TransactionPublisher eventPublisher;
 
-    public TransactionService (AccountRepository accountRepository, TransactionRepository transactionRepository, RabbitTemplate rabbitTemplate) {
+    public TransactionService (AccountRepository accountRepository, TransactionRepository transactionRepository, TransactionPublisher transactionPublisher) {
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
-        this.rabbitTemplate = rabbitTemplate;
+        this.eventPublisher = transactionPublisher;
     }
 
     @Transactional
     public void deposit(Long destAccountId, Long amount) {
         Account destination = accountRepository.findById(destAccountId).orElseThrow(() -> new NotFoundException("Cuenta no encontrada"));
+
+        if (amount <= 0) {
+            throw new NegativeAmountException("Debe indicar un monto positivo");
+        }
 
         destination.setBalance(destination.getBalance() + amount);
         accountRepository.save(destination);
@@ -39,6 +46,11 @@ public class TransactionService {
 
     @Transactional
     public void withdrawal (Long destAccountId, Long amount) {
+
+        if (amount <= 0) {
+            throw new NegativeAmountException("Debe indicar un monto positivo");
+        }
+
         Account destination = accountRepository.findById(destAccountId).orElseThrow(() -> new NotFoundException("Cuenta no encontrada"));
 
         if (destination.getBalance() < amount) {
@@ -56,6 +68,10 @@ public class TransactionService {
     @Transactional
     public void transfer(Long sourceAccountId, Long destAccountId, Long amount) {
 
+        if (amount <= 0) {
+            throw new NegativeAmountException("Debe indicar un monto positivo");
+        }
+
         Account source = accountRepository.findById(sourceAccountId)
                 .orElseThrow(() -> new NotFoundException("Cuenta origen no existe"));
         Account destination = accountRepository.findById(destAccountId)
@@ -69,10 +85,19 @@ public class TransactionService {
         destination.setBalance(destination.getBalance() + amount);
 
         Transaction tr = new Transaction(sourceAccountId, destAccountId, amount);
-        tr.setStatus(TransactionStatus.COMPLETED);
+        tr.setStatus(TransactionStatus.PENDING);
         transactionRepository.save(tr);
 
-    }
+        TransactionEvent event = new TransactionEvent(
+                tr.getId(),
+                tr.getSourceAccountId(),
+                tr.getDestinationAccountId(),
+                tr.getAmount(),
+                tr.getStatus()
+        );
 
+        eventPublisher.publishTransactionCreated(event);
+
+    }
 
 }

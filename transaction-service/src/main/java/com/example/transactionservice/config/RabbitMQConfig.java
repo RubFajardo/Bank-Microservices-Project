@@ -1,10 +1,8 @@
 package com.example.transactionservice.config;
 
+import com.example.transactionservice.messaging.event.TransactionEvent;
 import com.example.transactionservice.messaging.event.UserCreatedEvent;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.support.converter.DefaultClassMapper;
@@ -22,7 +20,66 @@ public class RabbitMQConfig {
     public static final String USER_CREATED_QUEUE = "user.created.queue";
     public static final String USER_CREATED_KEY = "user.created";
 
-    public static final String USER_CREATED_DLQ = "user.created.dlq";
+    public static final String TRANSACTION_EXCHANGE = "transaction.exchange";
+    public static final String NOTIFICATION_QUEUE = "transaction.notification.queue";
+    public static final String AUDIT_QUEUE = "transaction.audit.queue";
+    public static final String FRAUD_QUEUE = "transaction.fraud.queue";
+
+    public static final String DLX_EXCHANGE = "dlx.exchange";
+
+    // Transactions bindings, queues and exchange
+
+    @Bean
+    public FanoutExchange transactionExchange() {
+        return new FanoutExchange(TRANSACTION_EXCHANGE);
+    }
+
+    @Bean
+    public Queue notificationQueue() {
+        Map<String, Object> args = new HashMap<>();
+
+        args.put("x-dead-letter-exchange", DLX_EXCHANGE);
+        args.put("x-dead-letter-routing-key", "transaction.notification.error");
+
+        return new Queue(NOTIFICATION_QUEUE, true, false, false, args);
+    }
+
+    @Bean
+    public Queue fraudQueue() {
+        Map<String, Object> args = new HashMap<>();
+
+        args.put("x-dead-letter-exchange", DLX_EXCHANGE);
+        args.put("x-dead-letter-routing-key", "transaction.fraud.error");
+
+        return new Queue(FRAUD_QUEUE, true, false, false, args);
+    }
+
+    @Bean
+    public Queue auditQueue() {
+        Map<String, Object> args = new HashMap<>();
+
+        args.put("x-dead-letter-exchange", DLX_EXCHANGE);
+        args.put("x-dead-letter-routing-key", "transaction.audit.error");
+
+        return new Queue(AUDIT_QUEUE, true, false, false, args);
+    }
+
+    @Bean
+    public Binding bindingFraud(Queue fraudQueue, FanoutExchange transactionExchange) {
+        return BindingBuilder.bind(fraudQueue).to(transactionExchange);
+    }
+
+    @Bean
+    public Binding bindingNotification(Queue notificationQueue, FanoutExchange transactionExchange) {
+        return BindingBuilder.bind(notificationQueue).to(transactionExchange);
+    }
+
+    @Bean
+    public Binding bindingAudit(Queue auditQueue, FanoutExchange transactionExchange) {
+        return BindingBuilder.bind(auditQueue).to(transactionExchange);
+    }
+
+    // User exchange, queues and bindings
 
     @Bean
     public TopicExchange userExchange() {
@@ -34,8 +91,8 @@ public class RabbitMQConfig {
 
         Map<String, Object> args = new HashMap<>();
 
-        args.put("x-dead-letter-exchange", USER_EXCHANGE);
-        args.put("x-dead-letter-routing-key", "user.created.dlq");
+        args.put("x-dead-letter-exchange", DLX_EXCHANGE);
+        args.put("x-dead-letter-routing-key", "user.created.error");
 
         return new Queue(USER_CREATED_QUEUE, true, false, false, args);
     }
@@ -51,20 +108,63 @@ public class RabbitMQConfig {
                 .with(USER_CREATED_KEY);
     }
 
+    // DLQ Binding and Queues
+
     @Bean
-    public Queue deadLetterQueue() {
-        return new Queue(USER_CREATED_DLQ);
+    public DirectExchange deadLetterExchange() {
+        return new DirectExchange(DLX_EXCHANGE);
     }
 
     @Bean
-    public Binding bindingDLQ(
-            Queue deadLetterQueue,
-            TopicExchange userExchange
-    ) {
+    public Queue transactionNotificationDLQ() {
+        return new Queue("transaction.notification.dlq", true);
+    }
+
+    @Bean
+    public Queue transactionFraudDLQ() {
+        return new Queue("transaction.fraud.dlq", true);
+    }
+
+    @Bean
+    public Queue transactionAuditDLQ() {
+        return new Queue("transaction.audit.dlq", true);
+    }
+
+    @Bean
+    public Queue userCreatedDLQ() {
+        return new Queue("user.created.dlq", true);
+    }
+
+    @Bean
+    public Binding bindingUserDLQ (Queue userCreatedDLQ, DirectExchange deadLetterExchange) {
         return BindingBuilder
-                .bind(deadLetterQueue)
-                .to(userExchange)
-                .with("user.created.dlq");
+                .bind(userCreatedDLQ)
+                .to(deadLetterExchange)
+                .with("user.created.error");
+    }
+
+    @Bean
+    public Binding bindingNotificationDLQ(Queue transactionNotificationDLQ, DirectExchange deadLetterExchange) {
+        return BindingBuilder
+                .bind(transactionNotificationDLQ)
+                .to(deadLetterExchange)
+                .with("transaction.notification.error");
+    }
+
+    @Bean
+    public Binding bindingAuditDLQ (Queue transactionAuditDLQ, DirectExchange deadLetterExchange) {
+        return BindingBuilder
+                .bind(transactionAuditDLQ)
+                .to(deadLetterExchange)
+                .with("transaction.audit.error");
+    }
+
+    @Bean
+    public Binding bindingFraudDLQ (Queue transactionFraudDLQ, DirectExchange deadLetterExchange) {
+        return BindingBuilder
+                .bind(transactionFraudDLQ)
+                .to(deadLetterExchange)
+                .with("transaction.fraud.error");
     }
 
     // Definir el Mapper
@@ -74,6 +174,7 @@ public class RabbitMQConfig {
         classMapper.setTrustedPackages("*");
         Map<String, Class<?>> idClassMapping = new HashMap<>();
         idClassMapping.put("user.created", UserCreatedEvent.class);
+        idClassMapping.put("transaction.created", TransactionEvent.class);
         classMapper.setIdClassMapping(idClassMapping);
         return classMapper;
     }
