@@ -81,9 +81,6 @@ public class TransactionService {
             throw new InsufficientFundsException("Saldo insuficiente");
         }
 
-        source.setBalance(source.getBalance() - amount);
-        destination.setBalance(destination.getBalance() + amount);
-
         Transaction tr = new Transaction(sourceAccountId, destAccountId, amount);
         tr.setStatus(TransactionStatus.PENDING);
         transactionRepository.save(tr);

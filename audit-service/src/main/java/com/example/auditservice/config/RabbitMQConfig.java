@@ -1,8 +1,7 @@
-package com.example.transactionservice.config;
+package com.example.auditservice.config;
 
-import com.example.transactionservice.messaging.event.TransactionEvent;
-import com.example.transactionservice.messaging.event.TransactionUpdated;
-import com.example.transactionservice.messaging.event.UserCreatedEvent;
+import com.example.auditservice.messaging.event.TransactionEvent;
+import com.example.auditservice.messaging.event.UserCreatedEvent;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -22,11 +21,7 @@ public class RabbitMQConfig {
     public static final String USER_CREATED_KEY = "user.created";
 
     public static final String TRANSACTION_EXCHANGE = "transaction.exchange";
-    public static final String NOTIFICATION_QUEUE = "transaction.notification.queue";
     public static final String AUDIT_QUEUE = "transaction.audit.queue";
-    public static final String FRAUD_QUEUE = "transaction.fraud.queue";
-
-    public static final String TRANSACTION_UPDATED_CORE_QUEUE = "transaction.updated.core.queue";
 
     public static final String DLX_EXCHANGE = "dlx.exchange";
 
@@ -35,34 +30,6 @@ public class RabbitMQConfig {
     @Bean
     public FanoutExchange transactionExchange() {
         return new FanoutExchange(TRANSACTION_EXCHANGE);
-    }
-
-    @Bean
-    public Queue transactionUpdatedCoreQueue() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("x-dead-letter-exchange", DLX_EXCHANGE);
-        args.put("x-dead-letter-routing-key", "transaction.update.core.error");
-        return new Queue(TRANSACTION_UPDATED_CORE_QUEUE, true, false, false, args);
-    }
-
-    @Bean
-    public Queue notificationQueue() {
-        Map<String, Object> args = new HashMap<>();
-
-        args.put("x-dead-letter-exchange", DLX_EXCHANGE);
-        args.put("x-dead-letter-routing-key", "transaction.notification.error");
-
-        return new Queue(NOTIFICATION_QUEUE, true, false, false, args);
-    }
-
-    @Bean
-    public Queue fraudQueue() {
-        Map<String, Object> args = new HashMap<>();
-
-        args.put("x-dead-letter-exchange", DLX_EXCHANGE);
-        args.put("x-dead-letter-routing-key", "transaction.fraud.error");
-
-        return new Queue(FRAUD_QUEUE, true, false, false, args);
     }
 
     @Bean
@@ -76,23 +43,8 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Binding bindingFraud(Queue fraudQueue, FanoutExchange transactionExchange) {
-        return BindingBuilder.bind(fraudQueue).to(transactionExchange);
-    }
-
-    @Bean
-    public Binding bindingNotification(Queue notificationQueue, FanoutExchange transactionExchange) {
-        return BindingBuilder.bind(notificationQueue).to(transactionExchange);
-    }
-
-    @Bean
     public Binding bindingAudit(Queue auditQueue, FanoutExchange transactionExchange) {
         return BindingBuilder.bind(auditQueue).to(transactionExchange);
-    }
-
-    @Bean
-    public Binding bindingUpdateCore(Queue transactionUpdatedCoreQueue, FanoutExchange transactionExchange) {
-        return BindingBuilder.bind(transactionUpdatedCoreQueue).to(transactionExchange);
     }
 
     // User exchange, queues and bindings
@@ -132,16 +84,6 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Queue transactionNotificationDLQ() {
-        return new Queue("transaction.notification.dlq", true);
-    }
-
-    @Bean
-    public Queue transactionFraudDLQ() {
-        return new Queue("transaction.fraud.dlq", true);
-    }
-
-    @Bean
     public Queue transactionAuditDLQ() {
         return new Queue("transaction.audit.dlq", true);
     }
@@ -149,11 +91,6 @@ public class RabbitMQConfig {
     @Bean
     public Queue userCreatedDLQ() {
         return new Queue("user.created.dlq", true);
-    }
-
-    @Bean
-    public Queue transactionUpdatedCoreDLQ() {
-        return new Queue("transaction.updated.core.dlq", true);
     }
 
     @Bean
@@ -165,35 +102,11 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Binding bindingNotificationDLQ(Queue transactionNotificationDLQ, DirectExchange deadLetterExchange) {
-        return BindingBuilder
-                .bind(transactionNotificationDLQ)
-                .to(deadLetterExchange)
-                .with("transaction.notification.error");
-    }
-
-    @Bean
     public Binding bindingAuditDLQ (Queue transactionAuditDLQ, DirectExchange deadLetterExchange) {
         return BindingBuilder
                 .bind(transactionAuditDLQ)
                 .to(deadLetterExchange)
                 .with("transaction.audit.error");
-    }
-
-    @Bean
-    public Binding bindingFraudDLQ (Queue transactionFraudDLQ, DirectExchange deadLetterExchange) {
-        return BindingBuilder
-                .bind(transactionFraudDLQ)
-                .to(deadLetterExchange)
-                .with("transaction.fraud.error");
-    }
-
-    @Bean
-    public Binding bindingUpdateCoreDLQ (Queue transactionUpdatedCoreDLQ, DirectExchange deadLetterExchange) {
-        return BindingBuilder
-                .bind(transactionUpdatedCoreDLQ)
-                .to(deadLetterExchange)
-                .with("transaction.update.core.error");
     }
 
     // Definir el Mapper
@@ -204,7 +117,6 @@ public class RabbitMQConfig {
         Map<String, Class<?>> idClassMapping = new HashMap<>();
         idClassMapping.put("user.created", UserCreatedEvent.class);
         idClassMapping.put("transaction.created", TransactionEvent.class);
-        idClassMapping.put("transaction.updated", TransactionUpdated.class);
         classMapper.setIdClassMapping(idClassMapping);
         return classMapper;
     }
