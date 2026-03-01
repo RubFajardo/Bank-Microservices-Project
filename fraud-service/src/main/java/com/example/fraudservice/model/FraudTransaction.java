@@ -3,7 +3,7 @@ package com.example.fraudservice.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "audit_transactions")
+@Table(name = "fraud_transactions")
 public class FraudTransaction {
 
     @Id

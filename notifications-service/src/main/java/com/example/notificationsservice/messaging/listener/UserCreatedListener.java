@@ -1,15 +1,12 @@
-package com.example.transactionservice.messaging.listener;
+package com.example.notificationsservice.messaging.listener;
 
-import com.example.transactionservice.config.RabbitMQConfig;
-import com.example.transactionservice.messaging.event.UserCreatedEvent;
-import com.example.transactionservice.model.Account;
-import com.example.transactionservice.model.TransactionUser;
-import com.example.transactionservice.repository.AccountRepository;
-import com.example.transactionservice.repository.TransactionUserRepository;
+import com.example.notificationsservice.config.RabbitMQConfig;
+import com.example.notificationsservice.messaging.event.UserCreatedEvent;
+import com.example.notificationsservice.model.NotificationUser;
+import com.example.notificationsservice.repository.NotificationUserRepository;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -18,10 +15,7 @@ import org.springframework.stereotype.Component;
 public class UserCreatedListener {
 
     @Autowired
-    private TransactionUserRepository userRepository;
-
-    @Autowired
-    private AccountRepository accountRepository;
+    private NotificationUserRepository userRepository;
 
     private static final Logger log = LoggerFactory.getLogger(UserCreatedListener.class);
 
@@ -31,14 +25,11 @@ public class UserCreatedListener {
 
         log.info("Evento recibido: Usuario creado con email [{}]", event.getEmail());
         try {
-            TransactionUser user = new TransactionUser(event.getId(), event.getEmail(), event.getName());
+            NotificationUser user = new NotificationUser(event.getId(), event.getEmail(), event.getName());
             userRepository.save(user);
-            Account account = new Account(user);
-            accountRepository.save(account);
         } catch (Exception e) {
             log.error("Error procesando evento de usuario: {}", e.getMessage());
             throw e;
         }
-
     }
 }

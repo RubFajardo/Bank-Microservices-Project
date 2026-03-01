@@ -1,10 +1,7 @@
 package com.example.authservice.config;
 
 import com.example.authservice.messaging.event.UserCreatedEvent;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.support.converter.DefaultClassMapper;
@@ -22,7 +19,7 @@ public class RabbitMQConfig {
     public static final String USER_CREATED_QUEUE = "user.created.queue";
     public static final String USER_CREATED_KEY = "user.created";
 
-    public static final String USER_CREATED_DLQ = "user.created.dlq";
+    public static final String DLX_EXCHANGE = "dlx.exchange";
 
     @Bean
     public TopicExchange userExchange() {
@@ -34,8 +31,8 @@ public class RabbitMQConfig {
 
         Map<String, Object> args = new HashMap<>();
 
-        args.put("x-dead-letter-exchange", USER_EXCHANGE);
-        args.put("x-dead-letter-routing-key", "user.created.dlq");
+        args.put("x-dead-letter-exchange", DLX_EXCHANGE);
+        args.put("x-dead-letter-routing-key", "user.created.error");
 
         return new Queue(USER_CREATED_QUEUE, true, false, false, args);
     }
@@ -52,19 +49,16 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Queue deadLetterQueue() {
-        return new Queue(USER_CREATED_DLQ);
+    public DirectExchange deadLetterExchange() {
+        return new DirectExchange(DLX_EXCHANGE);
     }
 
     @Bean
-    public Binding bindingDLQ(
-            Queue deadLetterQueue,
-            TopicExchange userExchange
-    ) {
+    public Binding bindingUserDLQ (Queue userCreatedDLQ, DirectExchange deadLetterExchange) {
         return BindingBuilder
-                .bind(deadLetterQueue)
-                .to(userExchange)
-                .with("user.created.dlq");
+                .bind(userCreatedDLQ)
+                .to(deadLetterExchange)
+                .with("user.created.error");
     }
 
     // Definir el Mapper

@@ -42,6 +42,16 @@ public class TransactionService {
         Transaction tr = new Transaction(null, destination.getId(), amount);
         tr.setStatus(TransactionStatus.COMPLETED);
         transactionRepository.save(tr);
+
+        TransactionEvent event = new TransactionEvent(
+                tr.getId(),
+                tr.getSourceAccountId(),
+                tr.getDestinationAccountId(),
+                tr.getAmount(),
+                tr.getStatus()
+        );
+
+        eventPublisher.publishTransactionCreated(event);
     }
 
     @Transactional
@@ -63,6 +73,16 @@ public class TransactionService {
         Transaction tr = new Transaction(destination.getId(), null, amount);
         tr.setStatus(TransactionStatus.COMPLETED);
         transactionRepository.save(tr);
+
+        TransactionEvent event = new TransactionEvent(
+                tr.getId(),
+                tr.getSourceAccountId(),
+                tr.getDestinationAccountId(),
+                tr.getAmount(),
+                tr.getStatus()
+        );
+
+        eventPublisher.publishTransactionCreated(event);
     }
 
     @Transactional

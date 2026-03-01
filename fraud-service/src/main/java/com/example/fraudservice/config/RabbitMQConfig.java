@@ -18,7 +18,7 @@ import java.util.Map;
 public class RabbitMQConfig {
 
     public static final String USER_EXCHANGE = "user.exchange";
-    public static final String USER_CREATED_QUEUE = "user.created.queue";
+    public static final String USER_CREATED_QUEUE = "fraud.user.created.queue";
     public static final String USER_CREATED_KEY = "user.created";
 
     public static final String TRANSACTION_EXCHANGE = "transaction.exchange";

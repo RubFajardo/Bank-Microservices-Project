@@ -1,10 +1,10 @@
-package com.example.fraudservice.model;
+package com.example.notificationsservice.model;
 
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "fraud_users")
-public class FraudUser {
+@Table(name = "notifications_users")
+public class NotificationUser {
 
     @Id
     private Long id;
@@ -16,9 +16,9 @@ public class FraudUser {
     private String email;
 
 
-    public FraudUser() {}
+    public NotificationUser() {}
 
-    public FraudUser(Long id, String email, String name) {
+    public NotificationUser(Long id, String email, String name) {
         this.id = id;
         this.email = email;
         this.name = name;

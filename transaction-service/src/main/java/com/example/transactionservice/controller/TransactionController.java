@@ -1,5 +1,6 @@
 package com.example.transactionservice.controller;
 
+import com.example.transactionservice.dto.AmountDTO;
 import com.example.transactionservice.dto.TransferInputDTO;
 import com.example.transactionservice.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,14 +16,14 @@ public class TransactionController {
     private TransactionService transactionService;
 
     @PostMapping("/deposit/{accountId}")
-    public ResponseEntity<String> deposit (@PathVariable Long accountId, @RequestBody Long amount) {
-        transactionService.deposit(accountId, amount);
+    public ResponseEntity<String> deposit (@PathVariable Long accountId, @RequestBody AmountDTO amount) {
+        transactionService.deposit(accountId, amount.getAmount());
         return ResponseEntity.ok("Deposito realizado correctamente");
     }
 
     @PostMapping("/withdrawal/{accountId}")
-    public ResponseEntity<String> withdrawal (@PathVariable Long accountId, @RequestBody Long amount) {
-        transactionService.withdrawal(accountId, amount);
+    public ResponseEntity<String> withdrawal (@PathVariable Long accountId, @RequestBody AmountDTO amount) {
+        transactionService.withdrawal(accountId, amount.getAmount());
         return ResponseEntity.ok("Retirada realizada correctamente");
     }
 

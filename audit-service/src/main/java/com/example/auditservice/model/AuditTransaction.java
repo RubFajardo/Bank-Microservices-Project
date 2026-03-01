@@ -48,4 +48,8 @@ public class AuditTransaction {
     public TransactionStatus getStatus() {
         return status;
     }
+
+    public void setStatus(TransactionStatus status) {
+        this.status = status;
+    }
 }
